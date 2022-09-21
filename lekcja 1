@@ -1,0 +1,193 @@
+Laboratorium - JavaScript
+Skrypt opisuje ćwiczenia z języka JavaScript, którego składnia znajduje się pod adresem: http://en.wikipedia.org/wiki/JavaScript_syntax. Polecam również tutorial ze strony w3schools, a także zestaw gotowych skryptów.
+
+Do wykonania ćwiczenia potrzebny jest edytor plików tekstowych (vim, kate, notepad) oraz przeglądarki internetowe (Firefox, Chrome).
+
+Stwórz dwa pliki tekstowe znajdujące się w tym samym katalogu: formularz.html i form_check.js.
+
+Formularz służy do wprowadzania danych osobowych (np. rejestracja użytkownika w serwisie internetowym) takich jak: imię, nazwisko, płeć (wybór jednej z opcji), nazwisko panieńskie, e-mail, ulica, miasto oraz uwagi. Poniżej znajduje się treść dokumentu HTML z elementem <form> o nazwie dane_osobowe. Dokument umieść w pliku formularz.html:
+
+<html>
+<head>
+        <title>Formularz</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <style>
+                input { margin-left: 50px }
+        </style>
+</head>
+<body>
+        <form name="dane_osobowe">
+                Imię <input type=text name="f_imie"><br/>
+
+                Nazwisko<input type=text name="f_nazwisko"><br/>
+
+                Płeć<br/>
+                <input name="f_plec" value="f_k" checked type="radio"/>kobieta<br/>
+                <input name="f_plec" value="f_m" type="radio"/>mężczyzna<br/>
+
+                Nazwisko panieńskie <input type=text name="f_nazwisko_p"><br/>
+
+                E-mail <input type=text name="f_email"><br/>
+
+                Ulica <input type=text name="f_ulica"><br/>
+
+                Miasto <input type=text name="f_miasto"><br/>
+
+                Uwagi: <br/>
+                <textarea rows="5" cols="25" name="uwagi"></textarea><br/>
+
+                <input type="button" value="Przeslij">
+        </form>
+</body>
+</html>
+W osobnym pliku form_check.js będziemy umieszczać kod JavaScript odpowiedzialny za walidację danych wprowadzanych przez użytkownika do formularza. Poniżej znajduje się kod funkcji pomocnicznych sprawdzających dlugość łańcucha tekstowego oraz obecność jedynie białych znaków.
+
+function isEmpty(str)
+{
+        if (str.length == 0)
+                return true
+        else
+                return false
+}
+
+function isWhiteSpace(str)
+{
+        var ws = "\t\n\r "
+        for (i = 0; i < str.length; i++)
+        {
+                var c = str.charAt(i)
+                if ( ws.indexOf(c) == -1)
+                        return false
+        }
+        return true
+}
+
+// jeżeli łańcuch jest niepoprawny, wyświetl komunikat o treści msg
+function checkString(str, msg)
+{
+        if ( isWhiteSpace(str) || isEmpty(str))
+        {
+                alert(msg)
+                return false
+        }
+        return true
+}
+W naszym formularzu chcemy, by użytkownik wypełnij pola imię, nazwisko, ulica oraz miasto. Poniższa funkcja validate() wywołuje checkString() na odpowiednich elementach formularza. Zwróć uwagę na zastosowanie koniunkcji warunków logicznych.
+
+function validate(form)
+{
+        return  checkString(form.elements["f_imie"].value, 'Błędne imię') &&
+                checkString(form.elements["f_nazwisko"].value,' Błędne nazwisko') &&
+                checkString(form.elements["f_ulica"].value,' Błędna ulica/osiedle') &&
+                checkString(form.elements["f_miasto"].value,' Błędne miasto')
+}
+Dodaj w nagłówku HTML w pliku formularz.html odwołanie do pliku form_check.js:
+
+<html>
+<head>
+        <title>Formularz</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <script src="form_check.js"></script>
+</head>
+<body>
+...
+Ostatnią czynnością jest dodanie do przycisku obsługi zdarzenia naciśnięcia przycisku. Przetestuj działanie dotychczasowej walidacji formularza.
+
+<input type="button" value="Przeslij" onClick="return validate(this.form)">
+Dodajmy funkcję weryfikującą poprawność wpowadzonego adresu e-mail. Wykorzystamy w tym celu mechanizm wyrażeń regularnych, który umożliwia sprawdzenie dopasowania napisu do zadanego wzorca. Dodaj do pliku form_check.js funkcję checkEmail() oraz uzupełnij funkcję validate(). Przetestuj działanie formularza.
+
+// zwraca wartosc prawda jesli przekazany argument
+// to poprawny adres email
+function checkEmailRegEx(str)
+{
+        var email = /[a-zA-Z_0-9\.]+@[a-zA-Z_0-9\.]+\.[a-zA-Z][a-zA-Z]+/
+        if (email.test(str))
+                 return true
+
+        alert("Podaj właściwy e-mail")
+        return false
+}
+Aby uruchomić weryfikację adresu email, konieczna jest modyfikacja funkcji validate(). Dodaj odpowiednie wywołanie funkcji checkEmail.
+
+checkEmail(form.elements["f_kod"].value)
+Zmodyfikujmy sposób wyświetlania informacji o błędzie pola tekstowego. Obok każdego pola (np. imię) <input> umieścimy element <span>, który wypełnimy dopiero w trakcie działania kodu JavaScript. Zauważ, że identyfikator elementu span odpowiada nazwie elementowi input.
+
+...
+Imię <input type=text name="f_imie"><span class="err" id="e_imie"/>
+Dodaj w nagłówku regułę CSS do poprawnego formatowania komunikatu o błędzie
+
+<style>
+    span.err { color : red; font-weight : bold; padding-left : 5px }
+</style>
+Dodajmy funkcję checkStringObject. Czym różni się jej działąnie od dotychczasowej funkcji checkString? Zaktualizuj funkcję validate oraz przetestuj nowy komunikat błędu.
+
+function clearError(objName)
+{
+        document.getElementById(objName).innerHTML = ""
+}
+
+function checkStringObject(obj, msg)
+{
+        var str = obj.value
+        var errorFieldName = "e_" + obj.name.substr(2,obj.name.length)
+
+        if ( isWhiteSpace(str) || isEmpty(str))
+        {
+                document.getElementById(errorFieldName).innerHTML = msg
+                obj.focus()
+                return false
+        }
+        clearError(errorFieldName)
+        return true
+}
+
+...
+// zmodyfikuj również funkcję validate, np. w taki sposób:
+checkStringObject(form.elements["f_imie"], 'Błędne imię')
+...
+Wprowadzimy kolejne modyfikacje do formularza: niech pole „Nazwisko panieńskie” będzie widoczne tylko gdy została zaznaczona właściwa płeć. Obsłużmy zdarzenie onClick elementu input ustawiając właściwość visibility stylu css na wartość visible albo hidden. W tym celu wykorzystamy poniższe funkcje pomocnicze:
+
+...
+<body>
+<script type=text/javascript>
+        function showElement(e)
+        {
+                document.getElementById(e).style.visibility = 'visible';
+        }
+        function hideElement(e)
+        {
+                document.getElementById(e).style.visibility = 'hidden';
+        }
+</script>
+...
+Aby umożliwić ukrywanie pola z nazwiskiem panieńskim, element <input> umieść w obrębie dodatkowego elementu <span> o atrybucie id="np":
+
+...
+<span id="np" style="visibility:visible;">
+        <input type=text name="f_nazwisko_p" />
+</span>
+...
+Dodaj obsługę zdarzenia wybrania jednej z opcji oznaczających płeć. W zależności od wybranej płci powinno nastąpić ukrycie albo wyświetlenie pola do wprowadzenia nazwiska panieńskiego.
+
+...
+<input name="f_plec" value="f_k" checked type="radio" onClick="showElement('np')"/>
+<input name="f_plec" value="f_m" type="radio" onClick="hideElement('np')"/>
+...
+W celu dokonania walidacji formularza, można również wykorzystać zdarzenia samych elementów input, np. zdarzenie onKeyUp. Zmodyfikuj dotychczasowy formularz tak, aby walidacja adresu email następowała już w trakcie wprowadzania danych. Zamiast okna alertu, komunikat o błędzie umieść w obrębie strony www (wykorzystaj dodatkowy element span).
+
+Na koniec dodajmy licznik długości wprowadzanego tekstu do pola memo. W pliku formularz.html wprowadź, bezpośrednio po polu typu memo, obszar do wyświetlania licznika znaków. Kod JavaScript wzbogać o funkcję cnt:
+
+<textarea rows="5" cols="25" name="uwagi"
+        onKeyUp = "cnt( this.form.uwagi, document.getElementById('zostalo'), 150)">
+</textarea>
+
+
+Pozostało <span id="zostalo">150</span> znaków
+
+...
+function cnt(form, msg, maxSize) {
+        if (form.value.length > maxSize)
+                form.value = form.value.substring(0,maxSize);
+        else
+                msg.innerHTML = maxSize - form.value.length;
+}
